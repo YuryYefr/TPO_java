@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define NRA 62   /* rows of matrix A */
 #define NCA 15   /* columns of matrix A */
@@ -14,6 +15,7 @@ int main(int argc, char *argv[]) {
     int averow, extra, offset, i, j, k;
     double a[NRA][NCA], b[NCA][NCB], c[NRA][NCB];
     MPI_Status status;
+    double start_time, end_time;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
@@ -44,6 +46,8 @@ int main(int argc, char *argv[]) {
         extra = NRA % numworkers;
         offset = 0;
 
+        start_time = MPI_Wtime();
+
         for (dest = 1; dest <= numworkers; dest++) {
             rows = (dest <= extra) ? averow + 1 : averow;
 
@@ -62,7 +66,10 @@ int main(int argc, char *argv[]) {
             MPI_Recv(&c[offset][0], rows * NCB, MPI_DOUBLE, source, FROM_WORKER, MPI_COMM_WORLD, &status);
         }
 
+        end_time = MPI_Wtime();
+
         /* Display result */
+        printf("Execution time (Blocking): %f seconds\n", end_time - start_time);
         printf("Result Matrix:\n");
         for (i = 0; i < NRA; i++) {
             for (j = 0; j < NCB; j++)
